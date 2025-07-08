@@ -85,32 +85,21 @@ class PluginSetu(Star):
     def setu(self):
         pass
 
-    @setu.command("get")
-    async def get_pure(self, event: AstrMessageEvent, tags: str = None):
-        """随机健全色图"""
-        await self.get(event, False, tags)
-    
-    @setu.command("r18")
-    async def get_r18(self, event: AstrMessageEvent, tags: str = None):
-        """随机 R-18 色图"""
-        await self.get(event, True, tags)
-
-    async def get(self, event: AstrMessageEvent, r18: bool, tags: str = None):
+    async def _get_setu(self, event: AstrMessageEvent, tags: str = None, r18: int = 0):
         tags = self.parse_tags(tags)
-
         send_forward = self.send_forward
 
         if self.send_forward:
             if event.get_platform_name() != "aiocqhttp":
                 send_forward = False
-                logger.warning("不支持当前平台，已禁用转发")
+                logger.info("不支持当前平台，已禁用转发")
 
         retry_count = 0
         while retry_count < 3:
             try:
                 async with aiohttp.ClientSession() as session:
                     data = {
-                        "r18": 0 if r18 != "r-18" else 1,
+                        "r18": r18,
                         "size": [self.image_size],
                         "tag": tags,
                         "excludeAI": self.exclude_ai,
@@ -180,15 +169,27 @@ class PluginSetu(Star):
                             continue
 
             except aiohttp.ClientError as e:
-                logger.error(f"API请求错误: {str(e)}")
-                yield event.plain_result(f"API请求错误: {str(e)}")
+                logger.error(f"API 请求错误: {str(e)}")
+                yield event.plain_result(f"API 请求错误: {str(e)}")
                 return
             except Exception as e:
                 logger.error(f"发生未知错误: {str(e)}")
                 yield event.plain_result(f"发生未知错误: {str(e)}")
                 return
 
-        yield event.plain_result(f"获取图片失败，已重试{retry_count}次")
+        yield event.plain_result(f"获取图片失败，已重试 {retry_count} 次")
+
+    @setu.command("get")
+    async def get(self, event: AstrMessageEvent, tags: str = None):
+        """随机色图"""
+        async for result in self._get_setu(event, tags, r18=0):
+            yield result
+
+    @setu.command("r18")
+    async def get_r18(self, event: AstrMessageEvent, tags: str = None):
+        """随机 R-18 色图"""
+        async for result in self._get_setu(event, tags, r18=1):
+            yield result
 
     @setu.command("help")
     async def help(self, event: AstrMessageEvent):
