@@ -195,10 +195,9 @@ class PluginSetu(Star):
         """帮助"""
         yield event.plain_result(
             "使用方法：\n"
-            "  输入 /setu get 获取一张随机色图\n"
-            "  输入 /setu get <tag1>,<tag2>&<tag3>... 获取特定标签的色图\n"
-            "  - 使用,分隔 OR 条件（同一组标签任选其一）\n"
-            "  - 使用&分隔 AND 条件（必须同时满足）\n"
-            "  - 标签中不得有空格，AND 条件最多3组，OR 条件每组最多 20 个"
+            "  输入 /setu get 获取一张随机涩图\n"
+            "  输入 /setu get <tag> 获取特定标签的涩图\n"
+            "  - 使用 , 分隔 OR 条件,使用 & 分隔 AND 条件\n"
+            "  - 标签中不得有空格，AND 条件最多 3 组，OR 条件每组最多 20 个"
         )
         return
