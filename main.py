@@ -55,7 +55,7 @@ async def image_obfus(img_data):
     "astrbot_plugin_setu",
     "Omnisch",
     "Astrbot 色图插件，支持自定义配置与标签指定",
-    "2.0.0",
+    "2.1.0",
     "https://github.com/Omnisch/astrbot_plugin_setu",
 )
 class PluginSetu(Star):
@@ -67,6 +67,7 @@ class PluginSetu(Star):
         self.send_forward = self.config.get("send_forward")
         self.image_size = self.config.get("image_size")
         self.image_info = self.config.get("image_info")
+        self.detailed_info = ""
 
     def parse_tags(self, tags: str) -> list[list[str]]:
         """解析标签字符串"""
@@ -133,6 +134,9 @@ class PluginSetu(Star):
                                 if self.image_hash_break:
                                     img_data = await image_obfus(img_data)
 
+                                # 暂存最新图片的详细信息
+                                self.detailed_info = f"标题：{img_title}\n作者：{img_author}\nPID：{img_pid}\n标签：{' '.join(f'#{tag}' for tag in (img_tags or []))}"
+
                                 if self.image_info == "只有图片":
                                     chain = [Image.fromBytes(img_data)]
                                 elif self.image_info == "基本信息":
@@ -145,9 +149,7 @@ class PluginSetu(Star):
                                 else:
                                     chain = [
                                         Image.fromBytes(img_data),
-                                        Plain(
-                                            f"标题：{img_title}\n作者：{img_author}\nPID：{img_pid}\n标签：{' '.join(f'#{tag}' for tag in (img_tags or []))}"
-                                        ),
+                                        Plain(self.detailed_info),
                                     ]
 
                                 if send_forward:
@@ -191,14 +193,19 @@ class PluginSetu(Star):
         async for result in self._get_setu(event, tags, r18=1):
             yield result
 
+    @setu.command("details")
+    async def last_details(self, event: AstrMessageEvent):
+        """上一张色图的详细信息"""
+        yield event.plain_result(self.detailed_info if self.detailed_info != "" else "无法获取上一张涩图的详细信息")
+
     @setu.command("help")
     async def help(self, event: AstrMessageEvent):
         """帮助"""
         yield event.plain_result(
             "使用方法：\n"
-            "  输入 /setu get 获取一张随机涩图\n"
-            "  输入 /setu get <tag> 获取特定标签的涩图\n"
+            "  /setu get 获取一张随机涩图\n"
+            "  /setu get <tag> 获取特定标签的涩图\n"
             "  - 使用 , 分隔 OR 条件,使用 & 分隔 AND 条件\n"
-            "  - 标签中不得有空格，AND 条件最多 3 组，OR 条件每组最多 20 个"
+            "  - 标签中不得有空格，AND 条件最多 3 组，OR 条件每组最多 20 个\n"
+            "  /setu details 查看上一张涩图的详细信息"
         )
-        return
